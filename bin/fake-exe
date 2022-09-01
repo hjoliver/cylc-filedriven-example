@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Fake the action of an executable that processes one or more input files
+# and generates one output file.
+#
+# Args:
+#   $1 - fake executable name
+# Environment:
+#   $INPUT - input files path glob
+#   $OUTPUT - output file path
+#
+# Sleeps for a short while with ${OUTPUT}.TMP written as an intermediate file.
+
+set -u
+
+EXE=$1
+
+INPUT_FILES=$(ls $INPUT)
+if [[ -z "$INPUT_FILES" ]]; then
+    >&2 echo "$EXE ERROR: file not found: $INPUT"
+    exit 1
+fi
+
+echo "$EXE: $INPUT --> $OUTPUT"
+touch "${OUTPUT}.TMP"
+sleep $((10 + RANDOM % 10))
+mv "${OUTPUT}.TMP" "${OUTPUT}"

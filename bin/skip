@@ -1,0 +1,94 @@
+#!/bin/env python3
+
+"""Match input and output files, and exit 1 if the outputs are out of date.
+
+Output files are out of date if any have older mod-times than any input files.
+
+Path globs representing one or more FILES can be given on the command line or
+taken from the environment:
+   $ skip [-v] [INPUT-GLOB OUTPUT-GLOB]
+     or
+   $ skip [-v]  # with $INPUT and $OUTPUT
+
+Multiple globs can be combined with a comma-separator, e.g.:
+   $ INPUT="foo.*, bar.*"
+
+Paths must be absolute, to avoid dependence on the scheduler CWD.
+
+Limitations: input and output directories are not yet supported.
+
+Usage:
+   $ skip || <regenerate-outputs>
+"""
+
+# TODO allow directories as outputs. See:
+# https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#directories-as-outputs
+# May need to flag dirs explicitly, e.g. "DIR:foo.*".
+# Directory mod-times update on read, so need to write a timestamp file to the directory?
+
+
+import os
+import re
+import sys
+import logging
+from pathlib import Path
+from typing import List
+
+
+# In case of comma in file paths: "a,b\,c" -> ["a", "b\,c"]
+DELIM = re.compile(r'(?<!\\),')
+
+def time_globber(pathglobs: str) -> List[float]:
+    """Match a comma-delimited list of path globs and return file mod-times."""
+    mtimes = []
+    for glob in DELIM.split(pathglobs):
+        pglob = Path(glob.strip())
+        logging.debug(f"Glob {pglob}")
+        if not pglob.is_absolute():
+            raise Exception(f"{pglob} is not an absolute path")
+        for fpath in pglob.parent.glob(pglob.name):
+            if not fpath.is_file():
+                logging.debug(f"Ignoring non-file {fpath}")
+                continue
+            logging.debug(f"  matched {fpath.name}")
+            mtimes.append(fpath.stat().st_mtime)
+    return mtimes
+
+
+def outdated(input_globs: str, output_globs: str) -> bool:
+    """Return True if any input is newer than any output."""
+    intimes = time_globber(input_globs)
+    logging.debug(f"Input times: {intimes}")
+    outtimes = time_globber(output_globs)
+    logging.debug(f"Ouput times: {outtimes}")
+    if not intimes:
+        # No input data.
+        return False
+    if not outtimes:
+        # No output data.
+        return True
+    return max(intimes) > min(outtimes)
+
+
+if __name__ == "__main__":
+    if "-v" in sys.argv:
+        logging.getLogger().setLevel(logging.DEBUG)
+        sys.argv.remove('-v')
+
+    if len(sys.argv) == 3:
+        input_globs = sys.argv[1]
+        output_globs = sys.argv[2]
+    else:
+        try:
+            input_globs = os.environ['INPUT']
+            output_globs = os.environ['OUTPUT']
+        except KeyError:
+            sys.stderr.write(__doc__)
+            sys.exit(1)
+
+    if not outdated(input_globs, output_globs):
+        print("Output files are up to date.")
+        sys.exit(0)
+    else:
+        print("Regeneration of output files needed.")
+        sys.exit(1)

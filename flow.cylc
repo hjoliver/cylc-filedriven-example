@@ -1,0 +1,23 @@
+#!Jinja2
+{% set DATA = "/tmp/data/foo" %}
+[task parameters]
+   m = a, b, c, fish  # models to run
+[scheduling]
+   [[graph]]
+      R1 = "clean => model<m> => report"
+[runtime]
+   [[clean]]
+      script = "skip -v || clean"
+      [[[environment]]]
+         INPUT = "{{DATA}}.raw"
+         OUTPUT = "{{DATA}}.clean"
+   [[model<m>]]
+      script = "skip -v || model ${CYLC_TASK_PARAM_m}"
+      [[[environment]]]
+         INPUT = "{{DATA}}.clean"
+         OUTPUT = "{{DATA}}.out.${CYLC_TASK_PARAM_m}"
+   [[report]]
+      script = "skip -v || report"
+      [[[environment]]]
+         INPUT = "{{DATA}}.out.*"
+         OUTPUT = "{{DATA}}.report"
