@@ -1,13 +1,21 @@
 #!Jinja2
 {% set DATA = "/tmp/data/covid" %}
 [task parameters]
-   m = 1..10  # or cat, dog, fish, ...
+   m = 1..30  # or cat, dog, fish, ...
 [scheduling]
+   [[queues]]
+      [[[models]]]
+         members = model<m>
+         limit = 4
    [[graph]]
       R1 = "clean => model<m> => report"
 [runtime]
    [[root]]  # inherited by all tasks
       script = "skip || ${CYLC_TASK_NAME%_m*}"
+      platform = mahuika-slurm  # run tasks via Slurm
+      [[[directives]]]  # Slurm defaults for all tasks
+         --partition = nesi_prepost
+         --account = nesi99999
    [[clean]]
       [[[environment]]]
          INPUT = "{{DATA}}.raw"

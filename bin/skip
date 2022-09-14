@@ -28,46 +28,13 @@ Usage:
 
 
 import os
-import re
 import sys
 import logging
-from pathlib import Path
-from typing import List
 
-
-# In case of comma in file paths: "a,b\,c" -> ["a", "b\,c"]
-DELIM = re.compile(r'(?<!\\),')
-
-def time_globber(pathglobs: str) -> List[float]:
-    """Match a comma-delimited list of path globs and return file mod-times."""
-    mtimes = []
-    for glob in DELIM.split(pathglobs):
-        pglob = Path(glob.strip())
-        logging.debug(f"Glob {pglob}")
-        if not pglob.is_absolute():
-            raise Exception(f"{pglob} is not an absolute path")
-        for fpath in pglob.parent.glob(pglob.name):
-            if not fpath.is_file():
-                logging.debug(f"Ignoring non-file {fpath}")
-                continue
-            logging.debug(f"  matched {fpath.name}")
-            mtimes.append(fpath.stat().st_mtime)
-    return mtimes
-
-
-def outdated(input_globs: str, output_globs: str) -> bool:
-    """Return True if any input is newer than any output."""
-    intimes = time_globber(input_globs)
-    logging.debug(f"Input times: {intimes}")
-    outtimes = time_globber(output_globs)
-    logging.debug(f"Ouput times: {outtimes}")
-    if not intimes:
-        # No input data.
-        return False
-    if not outtimes:
-        # No output data.
-        return True
-    return max(intimes) > min(outtimes)
+from iomodtimes import (
+    outdated,
+    delete_files
+)
 
 
 if __name__ == "__main__":
@@ -91,4 +58,5 @@ if __name__ == "__main__":
         sys.exit(0)
     else:
         print("Regeneration of output files needed.")
+        delete_files(output_globs)
         sys.exit(1)

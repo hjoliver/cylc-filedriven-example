@@ -9,11 +9,13 @@
 #   $INPUT - input files path glob
 #   $OUTPUT - output file path
 #
-# Sleeps for a short while with ${OUTPUT}.TMP written as an intermediate file.
+# Sleeps for a short while with ${OUTPUT}${TMP} written as
+# an intermediate file to indicate processing.
 
 set -u
 
 EXE=$1
+TMP='.tmp o'
 
 INPUT_FILES=$(ls $INPUT)
 if [[ -z "$INPUT_FILES" ]]; then
@@ -22,6 +24,6 @@ if [[ -z "$INPUT_FILES" ]]; then
 fi
 
 echo "$EXE: $INPUT --> $OUTPUT"
-touch "${OUTPUT}.TMP"
-sleep $((10 + RANDOM % 10))
-mv "${OUTPUT}.TMP" "${OUTPUT}"
+touch "${OUTPUT}${TMP}"
+sleep $((5 + RANDOM % 10))
+mv "${OUTPUT}${TMP}" "${OUTPUT}"
