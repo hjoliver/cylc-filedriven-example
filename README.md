@@ -99,6 +99,14 @@ Visualized with `cylc graph`:
 
 ## Things to note
 
+### Task executable names
+
+For convenience, the tasks have been given the same names as the executables,
+so the same `script` item inherited from `root` can be used to invoke the
+right executable by task name. The parametermised models are all invoked by the
+same `model` executable, so we strip the parameter off the task name in that
+case. (Each model run still knows its parameter value from the job environment).
+
 ### On-demand execution
 
 Install and play a new instance of the worflow each time. Cylc is designed to
