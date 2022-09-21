@@ -15,7 +15,7 @@
 set -u
 
 EXE=$1
-TMP='.tmp o'
+TMP='.tmp'
 
 INPUT_FILES=$(ls $INPUT)
 if [[ -z "$INPUT_FILES" ]]; then

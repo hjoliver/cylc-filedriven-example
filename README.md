@@ -107,6 +107,17 @@ executable by the task name. The parameterised model runs are all invoked by
 the same `model` executable, so we strip the parameter off the task name to
 handle that. (Models can still get their parameter value from job environment).
 
+### The data directory
+
+Tasks should normally read and write from the self-contained workflow run
+directory, but for make-like model each new run needs access to the
+same intermediate data files, so we keep everything in an external
+data directory. For this example, create a mock input data file:
+
+```console
+$ touch /tmp/data/covid.raw
+```
+
 ### On-demand execution
 
 Install and play a new instance of the worflow each time. Cylc is designed to
@@ -115,14 +126,6 @@ restart rather then rerun from scratch if the same instance is re-played.:
 ```console
 $ cylc install demo && cylc play demo && cylc tui demo
 ```
-
-### The data directory
-
-Tasks should normally read and write from the self-contained workflow run
-directory, but for make-like model each new run needs access to the
-same intermediate data files, so we keep everything in an external
-data directory.
-
 
 ### Things to try
 
